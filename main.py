@@ -126,13 +126,16 @@ def chat(payload: ChatRequest):
     level = classify_complexity(payload.message)
     reply, model_used = get_reply(payload.message, level, system_prompt)
 
-    supabase.table("chat_history").insert({
-        "session_id": payload.session_id,
-        "user_message": payload.message,
-        "assistant_message": reply,
-        "model": model_used,
-        "tokens_used": None,
-        "origem": payload.origem,
-    }).execute()
+    try:
+        supabase.table("chat_history").insert({
+            "session_id": payload.session_id,
+            "user_message": payload.message,
+            "assistant_message": reply,
+            "model": model_used,
+            "tokens_used": None,
+            "origem": payload.origem,
+        }).execute()
+    except Exception as e:
+        print(f"[ERRO Supabase chat_history]: {e}")
 
     return {"reply": reply}
