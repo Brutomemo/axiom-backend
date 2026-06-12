@@ -50,10 +50,13 @@ class LeadRequest(BaseModel):
     empresa: str | None = None
     mensagem: str | None = None
     interesse: list[str] | None = None
+    servicos: list[str] | None = None
     origem: str = "strategic-intelligence"
+
 
 @app.post("/api/lead")
 def lead(payload: LeadRequest):
+    areas = payload.interesse or payload.servicos or []
     try:
         result = supabase.table("leads").insert({
             "nome": payload.nome,
@@ -61,7 +64,7 @@ def lead(payload: LeadRequest):
             "telefone": payload.telefone,
             "empresa": payload.empresa,
             "mensagem": payload.mensagem,
-            "area_interesse": ", ".join(payload.interesse) if payload.interesse else None,
+            "area_interesse": ", ".join(areas) if areas else None,
             "origem": payload.origem,
             "status": "novo",
         }).execute()
@@ -69,7 +72,7 @@ def lead(payload: LeadRequest):
         return {"success": True, "lead_id": lead_id}
     except Exception as e:
         print(f"[ERRO Supabase leads]: {e}")
-        return {"success": False}
+        return {"success": False, "error": str(e)}
 
 
 class ChatRequest(BaseModel):
