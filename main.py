@@ -42,6 +42,36 @@ COMPLEX_KEYWORDS = [
     "explique em detalhes", "plano completo", "processo completo",
 ]
 
+
+class LeadRequest(BaseModel):
+    nome: str | None = None
+    email: str | None = None
+    telefone: str | None = None
+    empresa: str | None = None
+    mensagem: str | None = None
+    interesse: list[str] | None = None
+    origem: str = "strategic-intelligence"
+
+@app.post("/api/lead")
+def lead(payload: LeadRequest):
+    try:
+        result = supabase.table("leads").insert({
+            "nome": payload.nome,
+            "email": payload.email,
+            "telefone": payload.telefone,
+            "empresa": payload.empresa,
+            "mensagem": payload.mensagem,
+            "area_interesse": ", ".join(payload.interesse) if payload.interesse else None,
+            "origem": payload.origem,
+            "status": "novo",
+        }).execute()
+        lead_id = result.data[0]["id"] if result.data else None
+        return {"success": True, "lead_id": lead_id}
+    except Exception as e:
+        print(f"[ERRO Supabase leads]: {e}")
+        return {"success": False}
+
+
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
