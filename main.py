@@ -52,6 +52,7 @@ class LeadRequest(BaseModel):
     interesse: list[str] | None = None
     servicos: list[str] | None = None
     origem: str = "strategic-intelligence"
+    session_id: str | None = None
 
 
 @app.post("/api/lead")
@@ -69,6 +70,16 @@ def lead(payload: LeadRequest):
             "status": "novo",
         }).execute()
         lead_id = result.data[0]["id"] if result.data else None
+
+        if lead_id and payload.session_id:
+            try:
+                supabase.table("chat_history") \
+                    .update({"lead_id": lead_id}) \
+                    .eq("session_id", payload.session_id) \
+                    .execute()
+            except Exception as e:
+                print(f"[ERRO Supabase vincular lead_id]: {e}")
+
         return {"success": True, "lead_id": lead_id}
     except Exception as e:
         print(f"[ERRO Supabase leads]: {e}")
