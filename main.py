@@ -43,84 +43,226 @@ COMPLEX_KEYWORDS = [
     "explique em detalhes", "plano completo", "processo completo",
 ]
 
-EMAIL_TEMPLATES = {
-    "strategic-intelligence": {
-        "subject": "AXIOM — Recebemos sua solicitação de diagnóstico",
-        "body": lambda nome, areas: f"""
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0f; color: #e2e8f0; padding: 40px; border-radius: 12px;">
-  <div style="text-align: center; margin-bottom: 32px;">
-    <h1 style="color: #06b6d4; font-size: 28px; margin: 0;">AXIOM</h1>
-    <p style="color: #64748b; margin: 4px 0 0;">Strategic Intelligence</p>
-  </div>
-  <h2 style="color: #f1f5f9; font-size: 20px;">Olá, {nome}!</h2>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Recebemos sua solicitação de diagnóstico estratégico e ficamos felizes com seu interesse.
-  </p>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Você demonstrou interesse em:
-  </p>
-  <div style="background: #1e293b; border-left: 3px solid #06b6d4; padding: 16px; border-radius: 4px; margin: 16px 0;">
-    <strong style="color: #06b6d4;">{areas}</strong>
-  </div>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Nossa equipe analisará suas informações e entrará em contato em breve para agendar uma conversa.
-  </p>
-  <div style="text-align: center; margin: 32px 0;">
-    <a href="https://axiom-dusky-delta.vercel.app" 
-       style="background: #06b6d4; color: #000; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-      Conhecer mais sobre a AXIOM
-    </a>
-  </div>
-  <p style="color: #475569; font-size: 13px; text-align: center; margin-top: 32px;">
-    AXIOM Strategic Intelligence · axiomstrategic.com.br
-  </p>
-</div>
-""",
-    },
-    "human-performance": {
-        "subject": "AXIOM Human Performance — Recebemos sua solicitação",
-        "body": lambda nome, areas: f"""
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0f; color: #e2e8f0; padding: 40px; border-radius: 12px;">
-  <div style="text-align: center; margin-bottom: 32px;">
-    <h1 style="color: #06b6d4; font-size: 28px; margin: 0;">AXIOM</h1>
-    <p style="color: #64748b; margin: 4px 0 0;">Human Performance</p>
-  </div>
-  <h2 style="color: #f1f5f9; font-size: 20px;">Olá, {nome}!</h2>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Recebemos sua solicitação e ficamos felizes em saber que você busca evoluir a performance humana na sua organização.
-  </p>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Você demonstrou interesse em:
-  </p>
-  <div style="background: #1e293b; border-left: 3px solid #06b6d4; padding: 16px; border-radius: 4px; margin: 16px 0;">
-    <strong style="color: #06b6d4;">{areas}</strong>
-  </div>
-  <p style="color: #94a3b8; line-height: 1.6;">
-    Nossa equipe de especialistas em psicologia organizacional e performance humana entrará em contato em breve.
-  </p>
-  <div style="text-align: center; margin: 32px 0;">
-    <a href="https://axiom-dusky-delta.vercel.app/pages/human-performance.html" 
-       style="background: #06b6d4; color: #000; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-      Conhecer Human Performance
-    </a>
-  </div>
-  <p style="color: #475569; font-size: 13px; text-align: center; margin-top: 32px;">
-    AXIOM Human Performance · axiomstrategic.com.br
-  </p>
-</div>
-""",
-    },
+LOGO_URL = "https://twzzolhitqypdosweqnj.supabase.co/storage/v1/object/public/axiom_backend/imagem_email/logo-email.webp"
+SITE_URL = "https://axiom-dusky-delta.vercel.app"
+
+
+def build_email_html(nome: str, areas: str, origem: str) -> str:
+    is_hp = origem == "human-performance"
+    divisao = "Human Performance" if is_hp else "Strategic Intelligence"
+    link = f"{SITE_URL}/pages/human-performance.html" if is_hp else SITE_URL
+    cta = "Explorar Human Performance" if is_hp else "Explorar Strategic Intelligence"
+
+    if is_hp:
+        intro = f"""A sua organização deu um passo importante. Identificar que <strong style="color:#e2e8f0;">pessoas são o centro de qualquer resultado sustentável</strong> é o começo de uma transformação real."""
+        contexto = """A AXIOM Human Performance atua na intersecção entre psicologia organizacional, dados comportamentais e estratégia — transformando riscos psicossociais em planos de ação, e ambientes fragmentados em culturas de alto desempenho."""
+        ponte = """Mas performance humana não existe isolada. Quando integrada à inteligência estratégica — com dados, automação e tecnologia — os resultados se tornam <strong style="color:#e2e8f0;">mais precisos, mais rápidos e mais duradouros.</strong>"""
+    else:
+        intro = f"""Dados sem direção são ruído. A sua organização reconheceu que <strong style="color:#e2e8f0;">decisões mais assertivas nascem de informações bem estruturadas</strong> — e isso já é uma vantagem competitiva."""
+        contexto = """A AXIOM Strategic Intelligence transforma dados brutos em inteligência operacional: KPIs que refletem a estratégia real do negócio, OKRs que alinham equipes, e aplicações web que colocam a informação certa nas mãos certas."""
+        ponte = """E quando a tecnologia encontra o fator humano — com diagnósticos comportamentais, saúde organizacional e desenvolvimento de lideranças — os resultados deixam de ser pontuais e se tornam <strong style="color:#e2e8f0;">sistêmicos e escaláveis.</strong>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AXIOM {divisao}</title>
+</head>
+<body style="margin:0;padding:0;background:#07080d;font-family:'Segoe UI',Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07080d;padding:48px 16px;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0"
+style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
+        border:1px solid #1a2035;overflow:hidden;
+        box-shadow:0 0 60px rgba(6,182,212,0.06);">
+
+<!-- HEADER -->
+<tr>
+    <td style="background:linear-gradient(160deg,#0d0f18 0%,#0f1628 60%,#0a1020 100%);
+            padding:48px 48px 36px;text-align:center;
+            border-bottom:1px solid #1a2035;position:relative;">
+    <img src="{LOGO_URL}" alt="AXIOM {divisao}" width="160"
+        style="max-width:160px;height:auto;display:block;margin:0 auto 20px;" />
+    <div style="display:inline-block;background:rgba(6,182,212,0.08);
+                border:1px solid rgba(6,182,212,0.2);border-radius:20px;
+                padding:4px 16px;margin-bottom:0;">
+        <span style="color:#06b6d4;font-size:11px;letter-spacing:3px;
+                    text-transform:uppercase;font-weight:600;">{divisao}</span>
+    </div>
+    </td>
+</tr>
+
+<!-- SAUDAÇÃO -->
+<tr>
+    <td style="padding:48px 48px 0;">
+    <p style="color:#64748b;font-size:12px;letter-spacing:2px;
+                text-transform:uppercase;margin:0 0 12px;">
+        Solicitação recebida
+    </p>
+    <h1 style="color:#f1f5f9;font-size:26px;font-weight:600;
+                line-height:1.3;margin:0 0 24px;">
+        {nome},<br>
+        <span style="color:#06b6d4;">sua jornada começa agora.</span>
+    </h1>
+    <p style="color:#64748b;font-size:14px;line-height:1.8;margin:0 0 32px;">
+        {intro}
+    </p>
+    </td>
+</tr>
+
+<!-- ÁREA DE INTERESSE -->
+<tr>
+    <td style="padding:0 48px 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+        <td style="background:linear-gradient(135deg,#0f1e2e,#0d1520);
+                    border:1px solid rgba(6,182,212,0.15);
+                    border-left:3px solid #06b6d4;
+                    border-radius:0 10px 10px 0;padding:20px 24px;">
+            <p style="color:#475569;font-size:11px;letter-spacing:2px;
+                    text-transform:uppercase;margin:0 0 8px;">
+            Seu interesse
+            </p>
+            <p style="color:#06b6d4;font-size:15px;font-weight:600;
+                    line-height:1.6;margin:0;">
+            {areas}
+            </p>
+        </td>
+        </tr>
+    </table>
+    </td>
+</tr>
+
+<!-- SOBRE A AXIOM -->
+<tr>
+    <td style="padding:0 48px 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+            style="background:#0a0c14;border:1px solid #1a2035;
+                    border-radius:12px;overflow:hidden;">
+        <tr>
+        <td style="padding:32px;">
+            <p style="color:#94a3b8;font-size:14px;line-height:1.8;margin:0 0 20px;">
+            {contexto}
+            </p>
+            <!-- DIVISOR SUTIL -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="height:1px;background:linear-gradient(to right,transparent,#1e293b,transparent);
+                        padding:0;margin:0 0 20px;display:block;">
+                </td>
+            </tr>
+            </table>
+            <p style="color:#64748b;font-size:13px;line-height:1.8;margin:20px 0 0;">
+            {ponte}
+            </p>
+        </td>
+        </tr>
+    </table>
+    </td>
+</tr>
+
+<!-- INTEGRAÇÃO DOS DOIS BRAÇOS -->
+<tr>
+    <td style="padding:0 48px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+        <!-- Strategic Intelligence -->
+        <td width="48%" style="background:#0d0f18;border:1px solid #1a2035;
+                                border-radius:10px;padding:20px;
+                                vertical-align:top;">
+            <p style="color:#06b6d4;font-size:10px;letter-spacing:2px;
+                    text-transform:uppercase;margin:0 0 8px;font-weight:600;">
+            Strategic Intelligence
+            </p>
+            <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
+            Dados, KPIs, OKRs e tecnologia transformados em decisões estratégicas.
+            </p>
+        </td>
+        <!-- Espaço -->
+        <td width="4%"></td>
+        <!-- Human Performance -->
+        <td width="48%" style="background:#0d0f18;border:1px solid #1a2035;
+                                border-radius:10px;padding:20px;
+                                vertical-align:top;">
+            <p style="color:#06b6d4;font-size:10px;letter-spacing:2px;
+                    text-transform:uppercase;margin:0 0 8px;font-weight:600;">
+            Human Performance
+            </p>
+            <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
+            Diagnóstico, saúde organizacional e liderança orientados por evidências.
+            </p>
+        </td>
+        </tr>
+    </table>
+    <p style="color:#475569;font-size:12px;text-align:center;
+                line-height:1.6;margin:20px 0 0;font-style:italic;">
+        "Inteligência estratégica + desempenho humano = resultados sustentáveis."
+    </p>
+    </td>
+</tr>
+
+<!-- PRÓXIMO PASSO -->
+<tr>
+    <td style="padding:0 48px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+            style="background:linear-gradient(135deg,rgba(6,182,212,0.05),rgba(6,182,212,0.02));
+                    border:1px solid rgba(6,182,212,0.1);border-radius:12px;">
+        <tr>
+        <td style="padding:28px;text-align:center;">
+            <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin:0 0 24px;">
+            Nossa equipe está analisando seu perfil e entrará em contato
+            <strong style="color:#e2e8f0;">em breve</strong> para uma conversa
+            sem compromisso — focada nas necessidades reais da sua organização.
+            </p>
+            <a href="{link}"
+            style="display:inline-block;background:#06b6d4;color:#000;
+                    font-weight:700;font-size:14px;padding:14px 36px;
+                    border-radius:8px;text-decoration:none;
+                    letter-spacing:0.5px;">
+            {cta} →
+            </a>
+        </td>
+        </tr>
+    </table>
+    </td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+    <td style="padding:24px 48px 32px;border-top:1px solid #1a2035;text-align:center;">
+    <p style="color:#1e293b;font-size:11px;margin:0 0 6px;letter-spacing:1px;
+                text-transform:uppercase;">
+        AXIOM · axiomstrategic.com.br
+    </p>
+    <p style="color:#1e293b;font-size:11px;margin:0;line-height:1.6;">
+        Você recebeu este e-mail porque entrou em contato pelo nosso site.<br>
+        Suas informações são tratadas com confidencialidade, em conformidade com a LGPD.
+    </p>
+    </td>
+</tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+EMAIL_SUBJECTS = {
+    "strategic-intelligence": "AXIOM — Sua jornada estratégica começa agora",
+    "human-performance": "AXIOM Human Performance — Recebemos sua solicitação",
 }
 
 
 def send_welcome_email(nome: str, email: str, areas: str, origem: str):
-    template = EMAIL_TEMPLATES.get(origem, EMAIL_TEMPLATES["strategic-intelligence"])
+    subject = EMAIL_SUBJECTS.get(origem, EMAIL_SUBJECTS["strategic-intelligence"])
+    html = build_email_html(nome, areas, origem)
     try:
         resend.Emails.send({
             "from": "AXIOM <onboarding@resend.dev>",
             "to": [email],
-            "subject": template["subject"],
-            "html": template["body"](nome, areas),
+            "subject": subject,
+            "html": html,
         })
         print(f"[EMAIL] Enviado para {email}")
     except Exception as e:
