@@ -44,7 +44,7 @@ COMPLEX_KEYWORDS = [
 ]
 
 LOGO_URL = "https://twzzolhitqypdosweqnj.supabase.co/storage/v1/object/public/axiom_backend/imagem_email/logo-email.webp"
-SITE_URL = "https://axiom-dusky-delta.vercel.app"
+SITE_URL = "https://axiomstrategic.com.br"
 
 
 def build_email_html(nome: str, areas: str, origem: str) -> str:
