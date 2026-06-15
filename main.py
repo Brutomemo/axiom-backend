@@ -259,7 +259,7 @@ def send_welcome_email(nome: str, email: str, areas: str, origem: str):
     html = build_email_html(nome, areas, origem)
     try:
         resend.Emails.send({
-            "from": "AXIOM <onboarding@resend.dev>",
+            "from": "AXIOM <contato@axiomstrategic.com.br>",
             "to": [email],
             "subject": subject,
             "html": html,
@@ -392,6 +392,51 @@ def get_reply(message: str, level: str, system_prompt: str) -> tuple[str, str]:
 @app.get("/")
 def root():
     return {"status": "ok", "message": "AXIOM backend funcionando"}
+
+    class EmailInbound(BaseModel):
+    from_email: str = ""
+    from_name: str = ""
+    subject: str = ""
+    text: str = ""
+    html: str = ""
+    to: str = ""
+
+
+@app.post("/api/email/inbound")
+async def email_inbound(payload: EmailInbound):
+    # Detecta origem pelo endereço de destino
+    origem = "human-performance" if "hp" in payload.to.lower() else "strategic-intelligence"
+
+    # Tenta vincular ao lead pelo e-mail do remetente
+    lead_id = None
+    try:
+        result = supabase.table("leads") \
+            .select("id") \
+            .eq("email", payload.from_email) \
+            .limit(1) \
+            .execute()
+        if result.data:
+            lead_id = result.data[0]["id"]
+    except Exception as e:
+        print(f"[ERRO vincular lead email_inbound]: {e}")
+
+    # Salva no Supabase
+    try:
+        supabase.table("emails_recebidos").insert({
+            "de": payload.from_email,
+            "nome_remetente": payload.from_name,
+            "assunto": payload.subject,
+            "corpo_texto": payload.text,
+            "corpo_html": payload.html,
+            "lead_id": lead_id,
+            "origem": origem,
+            "status": "novo",
+        }).execute()
+        print(f"[EMAIL INBOUND] Recebido de {payload.from_email}")
+    except Exception as e:
+        print(f"[ERRO Supabase email_inbound]: {e}")
+
+    return {"success": True}
 
 
 @app.post("/api/chat")
