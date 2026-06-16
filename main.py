@@ -1,6 +1,9 @@
+import email as email_lib
 import json
 import os
 import re
+import time
+import urllib.error
 import urllib.request
 import resend
 from fastapi import FastAPI
@@ -411,13 +414,110 @@ class EmailInbound(BaseModel):
     data: ResendWebhookData | None = None
 
 
+def _normalize_email_response(data) -> dict:
+    if isinstance(data, dict):
+        return data
+    if hasattr(data, "model_dump"):
+        return data.model_dump()
+    if hasattr(data, "keys"):
+        try:
+            return dict(data)
+        except Exception:
+            pass
+    fields = ("html", "text", "subject", "from", "to", "headers", "raw", "id")
+    result = {}
+    for field in fields:
+        value = getattr(data, field, None)
+        if field == "from" and value is None:
+            value = getattr(data, "from_", None)
+        if value is not None:
+            result[field] = value
+    if result:
+        return result
+    if hasattr(data, "__dict__"):
+        return {k: v for k, v in vars(data).items() if not k.startswith("_")}
+    return {}
+
+
 def fetch_received_email(email_id: str) -> dict:
+    receiving_get = getattr(getattr(resend.Emails, "Receiving", None), "get", None)
+    if receiving_get:
+        try:
+            return _normalize_email_response(receiving_get(email_id=email_id))
+        except Exception as e:
+            print(f"[WARN Resend SDK fetch]: {e}")
+
     req = urllib.request.Request(
         f"https://api.resend.com/emails/receiving/{email_id}",
-        headers={"Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}"},
+        headers={
+            "Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}",
+            "Accept": "application/json",
+            "User-Agent": "axiom-backend/1.0",
+        },
+        method="GET",
     )
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[ERRO Resend HTTP {e.code}]: {body}")
+        raise
+
+
+def _parse_mime_body(raw_bytes: bytes) -> tuple[str, str]:
+    from email import policy
+
+    msg = email_lib.message_from_bytes(raw_bytes, policy=policy.default)
+    text = ""
+    html = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            if part.get_content_disposition() == "attachment":
+                continue
+            content_type = part.get_content_type()
+            try:
+                payload = part.get_content()
+            except Exception:
+                continue
+            if content_type == "text/plain" and not text:
+                text = payload if isinstance(payload, str) else str(payload)
+            elif content_type == "text/html" and not html:
+                html = payload if isinstance(payload, str) else str(payload)
+    else:
+        content_type = msg.get_content_type()
+        try:
+            payload = msg.get_content()
+        except Exception:
+            payload = ""
+        if content_type == "text/html":
+            html = payload if isinstance(payload, str) else str(payload)
+        elif content_type == "text/plain":
+            text = payload if isinstance(payload, str) else str(payload)
+    return text or "", html or ""
+
+
+def extract_email_body(email_content: dict) -> tuple[str, str]:
+    text = email_content.get("text") or ""
+    html = email_content.get("html") or ""
+    if text or html:
+        return text, html
+
+    raw = email_content.get("raw") or {}
+    download_url = raw.get("download_url") if isinstance(raw, dict) else None
+    if not download_url:
+        return text, html
+
+    try:
+        req = urllib.request.Request(
+            download_url,
+            headers={"User-Agent": "axiom-backend/1.0"},
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return _parse_mime_body(resp.read())
+    except Exception as e:
+        print(f"[ERRO raw email download]: {e}")
+        return text, html
 
 
 def parse_sender(from_header: str) -> tuple[str, str]:
@@ -441,11 +541,20 @@ async def email_inbound(payload: EmailInbound):
     from_name = ""
     text = ""
     html = ""
+    email_content = {}
 
-    try:
-        email_content = fetch_received_email(webhook.email_id)
-        text = email_content.get("text") or ""
-        html = email_content.get("html") or ""
+    for attempt in range(3):
+        try:
+            email_content = fetch_received_email(webhook.email_id)
+            text, html = extract_email_body(email_content)
+            if text or html:
+                break
+        except Exception as e:
+            print(f"[ERRO Resend fetch email tentativa {attempt + 1}]: {e}")
+        if attempt < 2:
+            time.sleep(1.5)
+
+    if email_content:
         if not subject:
             subject = email_content.get("subject") or ""
         if not from_email:
@@ -454,12 +563,17 @@ async def email_inbound(payload: EmailInbound):
         if not to_str and content_to:
             to_str = ", ".join(content_to) if isinstance(content_to, list) else str(content_to)
         headers = email_content.get("headers") or {}
-        header_from = headers.get("from", "") if isinstance(headers, dict) else ""
-        parsed_email, from_name = parse_sender(header_from)
+        header_from = ""
+        if isinstance(headers, dict):
+            header_from = next(
+                (value for key, value in headers.items() if key.lower() == "from"),
+                "",
+            )
+        parsed_email, parsed_name = parse_sender(header_from)
         if parsed_email:
             from_email = parsed_email
-    except Exception as e:
-        print(f"[ERRO Resend fetch email]: {e}")
+        if parsed_name:
+            from_name = parsed_name
 
     # Detecta origem pelo endereço de destino
     origem = "human-performance" if "hp" in to_str.lower() else "strategic-intelligence"
@@ -476,6 +590,18 @@ async def email_inbound(payload: EmailInbound):
             lead_id = result.data[0]["id"]
     except Exception as e:
         print(f"[ERRO vincular lead email_inbound]: {e}")
+
+    if not from_name and lead_id:
+        try:
+            lead_result = supabase.table("leads") \
+                .select("nome") \
+                .eq("id", lead_id) \
+                .limit(1) \
+                .execute()
+            if lead_result.data:
+                from_name = lead_result.data[0].get("nome") or ""
+        except Exception as e:
+            print(f"[ERRO buscar nome lead]: {e}")
 
     # Salva no Supabase
     try:
