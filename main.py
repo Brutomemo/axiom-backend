@@ -394,12 +394,12 @@ def root():
     return {"status": "ok", "message": "AXIOM backend funcionando"}
 
     class EmailInbound(BaseModel):
-    from_email: str = ""
-    from_name: str = ""
-    subject: str = ""
-    text: str = ""
-    html: str = ""
-    to: str = ""
+        from_email: str = ""
+        from_name: str = ""
+        subject: str = ""
+        text: str = ""
+        html: str = ""
+        to: str = ""
 
 
 @app.post("/api/email/inbound")
