@@ -1,8 +1,11 @@
+import json
 import os
+import re
+import urllib.request
 import resend
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from groq import Groq
 from openai import OpenAI
 from anthropic import Anthropic
@@ -394,26 +397,79 @@ def root():
     return {"status": "ok", "message": "AXIOM backend funcionando"}
 
 
-class EmailInbound(BaseModel):
-    from_email: str = ""
-    from_name: str = ""
+class ResendWebhookData(BaseModel):
+    model_config = {"populate_by_name": True}
+
+    email_id: str = ""
+    from_email: str = Field(default="", alias="from")
+    to: list[str] = []
     subject: str = ""
-    text: str = ""
-    html: str = ""
-    to: str = ""
+
+
+class EmailInbound(BaseModel):
+    type: str = ""
+    data: ResendWebhookData | None = None
+
+
+def fetch_received_email(email_id: str) -> dict:
+    req = urllib.request.Request(
+        f"https://api.resend.com/emails/receiving/{email_id}",
+        headers={"Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}"},
+    )
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read().decode())
+
+
+def parse_sender(from_header: str) -> tuple[str, str]:
+    if not from_header:
+        return "", ""
+    match = re.match(r'^(?:"?([^"<]*)"?\s*)?<([^>]+@[^>]+)>$', from_header.strip())
+    if match:
+        return match.group(2).strip(), (match.group(1) or "").strip()
+    return from_header.strip(), ""
 
 
 @app.post("/api/email/inbound")
 async def email_inbound(payload: EmailInbound):
+    if payload.type != "email.received" or not payload.data or not payload.data.email_id:
+        return {"success": False, "error": "evento inválido"}
+
+    webhook = payload.data
+    from_email = webhook.from_email
+    to_str = ", ".join(webhook.to) if webhook.to else ""
+    subject = webhook.subject
+    from_name = ""
+    text = ""
+    html = ""
+
+    try:
+        email_content = fetch_received_email(webhook.email_id)
+        text = email_content.get("text") or ""
+        html = email_content.get("html") or ""
+        if not subject:
+            subject = email_content.get("subject") or ""
+        if not from_email:
+            from_email = email_content.get("from") or ""
+        content_to = email_content.get("to") or []
+        if not to_str and content_to:
+            to_str = ", ".join(content_to) if isinstance(content_to, list) else str(content_to)
+        headers = email_content.get("headers") or {}
+        header_from = headers.get("from", "") if isinstance(headers, dict) else ""
+        parsed_email, from_name = parse_sender(header_from)
+        if parsed_email:
+            from_email = parsed_email
+    except Exception as e:
+        print(f"[ERRO Resend fetch email]: {e}")
+
     # Detecta origem pelo endereço de destino
-    origem = "human-performance" if "hp" in payload.to.lower() else "strategic-intelligence"
+    origem = "human-performance" if "hp" in to_str.lower() else "strategic-intelligence"
 
     # Tenta vincular ao lead pelo e-mail do remetente
     lead_id = None
     try:
         result = supabase.table("leads") \
             .select("id") \
-            .eq("email", payload.from_email) \
+            .eq("email", from_email) \
             .limit(1) \
             .execute()
         if result.data:
@@ -424,16 +480,16 @@ async def email_inbound(payload: EmailInbound):
     # Salva no Supabase
     try:
         supabase.table("emails_recebidos").insert({
-            "de": payload.from_email,
-            "nome_remetente": payload.from_name,
-            "assunto": payload.subject,
-            "corpo_texto": payload.text,
-            "corpo_html": payload.html,
+            "de": from_email,
+            "nome_remetente": from_name,
+            "assunto": subject,
+            "corpo_texto": text,
+            "corpo_html": html,
             "lead_id": lead_id,
             "origem": origem,
             "status": "novo",
         }).execute()
-        print(f"[EMAIL INBOUND] Recebido de {payload.from_email}")
+        print(f"[EMAIL INBOUND] Recebido de {from_email}")
     except Exception as e:
         print(f"[ERRO Supabase email_inbound]: {e}")
 
