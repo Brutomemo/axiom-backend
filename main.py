@@ -43,7 +43,7 @@ COMPLEX_KEYWORDS = [
     "explique em detalhes", "plano completo", "processo completo",
 ]
 
-LOGO_URL = "https://twzzolhitqypdosweqnj.supabase.co/storage/v1/object/public/axiom_backend/imagem_email/logo-email.webp"
+LOGO_URL = "https://twzzolhitqypdosweqnj.supabase.co/storage/v1/object/public/axiom_backend/imagem_email/logo-email.png"
 SITE_URL = "https://axiomstrategic.com.br"
 
 
