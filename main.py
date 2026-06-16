@@ -96,7 +96,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
 <!-- SAUDAÇÃO -->
 <tr>
     <td style="padding:48px 48px 0;">
-    <p style="color:#64748b;font-size:12px;letter-spacing:2px;
+    <p style="color:#cbd5e1;font-size:12px;letter-spacing:2px;
                 text-transform:uppercase;margin:0 0 12px;">
         Solicitação recebida
     </p>
@@ -105,7 +105,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
         {nome},<br>
         <span style="color:#06b6d4;">sua jornada começa agora.</span>
     </h1>
-    <p style="color:#64748b;font-size:14px;line-height:1.8;margin:0 0 32px;">
+    <p style="color:#cbd5e1;font-size:14px;line-height:1.8;margin:0 0 32px;">
         {intro}
     </p>
     </td>
@@ -120,7 +120,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                     border:1px solid rgba(6,182,212,0.15);
                     border-left:3px solid #06b6d4;
                     border-radius:0 10px 10px 0;padding:20px 24px;">
-            <p style="color:#475569;font-size:11px;letter-spacing:2px;
+            <p style="color:#94a3b8;font-size:11px;letter-spacing:2px;
                     text-transform:uppercase;margin:0 0 8px;">
             Seu interesse
             </p>
@@ -142,7 +142,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                     border-radius:12px;overflow:hidden;">
         <tr>
         <td style="padding:32px;">
-            <p style="color:#94a3b8;font-size:14px;line-height:1.8;margin:0 0 20px;">
+            <p style="color:#e2e8f0;font-size:14px;line-height:1.8;margin:0 0 20px;">
             {contexto}
             </p>
             <!-- DIVISOR SUTIL -->
@@ -153,7 +153,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                 </td>
             </tr>
             </table>
-            <p style="color:#64748b;font-size:13px;line-height:1.8;margin:20px 0 0;">
+            <p style="color:#cbd5e1;font-size:13px;line-height:1.8;margin:20px 0 0;">
             {ponte}
             </p>
         </td>
@@ -175,7 +175,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                     text-transform:uppercase;margin:0 0 8px;font-weight:600;">
             Strategic Intelligence
             </p>
-            <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
+            <p style="color:#cbd5e1;font-size:12px;line-height:1.6;margin:0;">
             Dados, KPIs, OKRs e tecnologia transformados em decisões estratégicas.
             </p>
         </td>
@@ -189,7 +189,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                     text-transform:uppercase;margin:0 0 8px;font-weight:600;">
             Human Performance
             </p>
-            <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
+            <p style="color:#cbd5e1;font-size:12px;line-height:1.6;margin:0;">
             Diagnóstico, saúde organizacional e liderança orientados por evidências.
             </p>
         </td>
@@ -210,7 +210,7 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
                     border:1px solid rgba(6,182,212,0.1);border-radius:12px;">
         <tr>
         <td style="padding:28px;text-align:center;">
-            <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin:0 0 24px;">
+            <p style="color:#e2e8f0;font-size:14px;line-height:1.7;margin:0 0 24px;">
             Nossa equipe está analisando seu perfil e entrará em contato
             <strong style="color:#e2e8f0;">em breve</strong> para uma conversa
             sem compromisso — focada nas necessidades reais da sua organização.
@@ -231,11 +231,11 @@ style="max-width:600px;width:100%;background:#0d0f18;border-radius:16px;
 <!-- FOOTER -->
 <tr>
     <td style="padding:24px 48px 32px;border-top:1px solid #1a2035;text-align:center;">
-    <p style="color:#1e293b;font-size:11px;margin:0 0 6px;letter-spacing:1px;
+    <p style="color:#64748b;font-size:11px;margin:0 0 6px;letter-spacing:1px;
                 text-transform:uppercase;">
         AXIOM · axiomstrategic.com.br
     </p>
-    <p style="color:#1e293b;font-size:11px;margin:0;line-height:1.6;">
+    <p style="color:#64748b;font-size:11px;margin:0;line-height:1.6;">
         Você recebeu este e-mail porque entrou em contato pelo nosso site.<br>
         Suas informações são tratadas com confidencialidade, em conformidade com a LGPD.
     </p>
