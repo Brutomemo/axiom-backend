@@ -6,7 +6,7 @@ import time
 import urllib.error
 import urllib.request
 import resend
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from groq import Groq
@@ -285,10 +285,24 @@ class LeadRequest(BaseModel):
     servicos: list[str] | None = None
     origem: str = "strategic-intelligence"
     session_id: str | None = None
+    consentimento_dados: bool = False
+    consentimento_marketing: bool = False
+
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else ""
 
 
 @app.post("/api/lead")
-def lead(payload: LeadRequest):
+def lead(payload: LeadRequest, request: Request):
+    if not payload.consentimento_dados:
+        return {"success": False, "error": "Consentimento obrigatório não informado."}
+
+    from datetime import datetime, timezone
+
     areas = payload.interesse or payload.servicos or []
     areas_str = ", ".join(areas) if areas else None
     try:
@@ -301,7 +315,12 @@ def lead(payload: LeadRequest):
             "area_interesse": areas_str,
             "origem": payload.origem,
             "status": "novo",
+            "consentimento_dados": payload.consentimento_dados,
+            "consentimento_marketing": payload.consentimento_marketing,
+            "consentimento_ip": get_client_ip(request),
+            "consentimento_data": datetime.now(timezone.utc).isoformat(),
         }).execute()
+
         lead_id = result.data[0]["id"] if result.data else None
 
         if lead_id and payload.session_id:
